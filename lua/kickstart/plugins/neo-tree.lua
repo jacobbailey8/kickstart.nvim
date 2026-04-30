@@ -3,32 +3,6 @@
 
 ---@module 'lazy'
 ---@type LazySpec
--- return {
---   'nvim-neo-tree/neo-tree.nvim',
---   version = '*',
---   dependencies = {
---     'nvim-lua/plenary.nvim',
---     'nvim-tree/nvim-web-devicons', -- not strictly required, but recommended
---     'MunifTanjim/nui.nvim',
---   },
---   lazy = true,
---   keys = {
---     { '<leader>e', ':Neotree reveal<CR>', desc = 'NeoTree reveal', silent = true },
---   },
---   ---@module 'neo-tree'
---   ---@type neotree.Config
---   opts = {
---     filesystem = {
---       window = {
---         mappings = {
---           ['<leader>e'] = 'close_window',
---         },
---       },
---     },
---   },
--- }
---
-
 return {
   'nvim-neo-tree/neo-tree.nvim',
   branch = 'v3.x',
@@ -73,7 +47,6 @@ return {
       position = 'left',
       width = 35,
       mappings = {
-        ['<CR>'] = 'open',
         ['l'] = 'open',
         ['h'] = 'close_node',
         ['S'] = 'open_split',
@@ -87,6 +60,25 @@ return {
         -- toggle hidden / ignored files
         ['I'] = 'toggle_hidden', -- show/hide dotfiles
         ['H'] = 'toggle_gitignore', -- show/hide gitignored files
+
+        -- Set CWD bindings
+        ['<CR>'] = function(state)
+          local node = state.tree:get_node()
+          if node then
+            local path = node.path
+            if vim.fn.isdirectory(path) == 0 then path = vim.fn.fnamemodify(path, ':h') end
+            vim.cmd('cd ' .. path)
+            print('CWD set to: ' .. path)
+          end
+        end,
+        ['p'] = function(state)
+          local node = state.tree:get_node()
+          if node then
+            local path = vim.fn.fnamemodify(node.path, ':h')
+            vim.cmd('cd ' .. path)
+            print('CWD set to parent: ' .. path)
+          end
+        end,
       },
     },
     filesystem = {

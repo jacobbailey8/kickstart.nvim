@@ -30,7 +30,7 @@ vim.o.mouse = 'a'
 --  Schedule the setting after `UiEnter` because it can increase startup-time.
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
--- vim.schedule(function() vim.o.clipboard = 'unnamedplus' end)
+vim.schedule(function() vim.o.clipboard = 'unnamedplus' end)
 
 -- Enable break indent
 vim.o.breakindent = true
@@ -131,7 +131,10 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- Keymaps to open and close splits
 vim.keymap.set('n', '<leader>|', '<C-w><C-V>', { desc = 'Split window vertically' })
 vim.keymap.set('n', '<leader>-', '<C-w><C-S>', { desc = 'Split window horizontally' })
-vim.keymap.set('n', '<leader>dw', '<C-w><C-Q>', { desc = '[D]elete [W]indow' })
+vim.keymap.set('n', '<leader>wd', '<C-w><C-Q>', { desc = '[D]elete [W]indow' })
+
+-- Close all but current window
+vim.keymap.set('n', '<leader>wa', '<Cmd>only<CR>', { desc = 'Close all other windows' })
 
 -- Yank/Delete whole buffer (file)
 vim.keymap.set('n', 'yag', '<cmd>%y+<CR>', { desc = '[Y]ank [A]round file' })
@@ -152,7 +155,23 @@ vim.keymap.set('v', '<A-k>', ":m '<-2<CR>gv=gv")
 -- move between buffers
 vim.keymap.set('n', '<S-l>', '<cmd>BufferLineCycleNext<CR>', { desc = 'Next buffer' })
 vim.keymap.set('n', '<S-h>', '<cmd>BufferLineCyclePrev<CR>', { desc = 'Previous buffer' })
-vim.keymap.set('n', '<leader>db', '<cmd>bd<CR>', { desc = 'Close buffer' })
+vim.keymap.set('n', '<leader>bd', '<cmd>bd<CR>', { desc = 'Close buffer' })
+
+-- delete buffers to the left
+vim.keymap.set('n', '<leader>bl', '<Cmd>BufferLineCloseLeft<CR>', { desc = 'Delete buffers left' })
+
+-- delete buffers to the right
+vim.keymap.set('n', '<leader>br', '<Cmd>BufferLineCloseRight<CR>', { desc = 'Delete buffers right' })
+
+-- delete all buffers except current
+vim.keymap.set('n', '<leader>ba', function()
+  local current = vim.api.nvim_get_current_buf()
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if buf ~= current then vim.api.nvim_buf_delete(buf, { force = true }) end
+  end
+end, { desc = 'Delete all other buffers' })
+
+vim.keymap.set('n', '<leader>bp', '<Cmd>BufferLinePick<CR>', { desc = 'Pick buffer' })
 
 -- Search and Replace Keymaps
 local opts = {}
@@ -349,7 +368,13 @@ require('lazy').setup({
       },
     },
   },
-
+  {
+    'amazonq',
+    url = 'https://github.com/awslabs/amazonq.nvim.git',
+    opts = {
+      ssoStartUrl = 'https://view.awsapps.com/start', -- Authenticate with Amazon Q Free Tier
+    },
+  },
   -- NOTE: Plugins can specify dependencies.
   --
   -- The dependencies are proper plugin specifications as well - anything
@@ -640,6 +665,7 @@ require('lazy').setup({
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         ts_ls = {},
 
+        zls = {},
         stylua = {}, -- Used to format Lua code
 
         -- Special Lua Config, as recommended by neovim help docs
