@@ -4,13 +4,13 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+vim.keymap.set('n', 's', '<Nop>')
+vim.keymap.set('x', 's', '<Nop>')
+
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
 vim.opt.fillchars:append { eob = ' ' }
-vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
-vim.wo.foldmethod = 'expr'
-vim.o.foldlevel = 99
 
 -- [[ Setting options ]]
 -- See `:help vim.o`
@@ -49,7 +49,7 @@ vim.o.signcolumn = 'yes'
 vim.o.updatetime = 250
 
 -- Decrease mapped sequence wait time
-vim.o.timeoutlen = 300
+vim.o.timeoutlen = 50
 
 -- Configure how new splits should be opened
 vim.o.splitright = true
@@ -113,12 +113,6 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
--- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
-
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
 --
@@ -135,10 +129,6 @@ vim.keymap.set('n', '<leader>wd', '<C-w><C-Q>', { desc = '[D]elete [W]indow' })
 
 -- Close all but current window
 vim.keymap.set('n', '<leader>wa', '<Cmd>only<CR>', { desc = 'Close all other windows' })
-
--- Yank/Delete whole buffer (file)
-vim.keymap.set('n', 'yag', '<cmd>%y+<CR>', { desc = '[Y]ank [A]round file' })
-vim.keymap.set('n', 'dag', '<cmd>%d<CR>', { desc = '[D]elete [A]round file' })
 
 -- move line down
 vim.keymap.set('n', '<A-j>', ':m .+1<CR>==', { desc = 'Move line down' })
@@ -205,10 +195,10 @@ vim.api.nvim_set_keymap('n', '<leader>rqf', ':cdo <CMD>SearchReplaceSingleBuffer
 vim.o.inccommand = 'split'
 
 -- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
--- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
--- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
--- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
--- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
+vim.keymap.set('n', '<C-S-h>', '<C-w>H', { desc = 'Move window to the left' })
+vim.keymap.set('n', '<C-S-l>', '<C-w>L', { desc = 'Move window to the right' })
+vim.keymap.set('n', '<C-S-j>', '<C-w>J', { desc = 'Move window to the lower' })
+vim.keymap.set('n', '<C-S-k>', '<C-w>K', { desc = 'Move window to the upper' })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -366,13 +356,6 @@ require('lazy').setup({
         { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
         { 'gr', group = 'LSP Actions', mode = { 'n' } },
       },
-    },
-  },
-  {
-    'amazonq',
-    url = 'https://github.com/awslabs/amazonq.nvim.git',
-    opts = {
-      ssoStartUrl = 'https://view.awsapps.com/start', -- Authenticate with Amazon Q Free Tier
     },
   },
   -- NOTE: Plugins can specify dependencies.
@@ -654,19 +637,17 @@ require('lazy').setup({
       --  See `:help lsp-config` for information about keys and how to configure
       ---@type table<string, vim.lsp.Config>
       local servers = {
-        -- clangd = {},
-        gopls = {},
-        -- pyright = {},
-        rust_analyzer = {},
-        --
         -- Some languages (like typescript) have entire language plugins that can be useful:
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         ts_ls = {},
-
         zls = {},
         stylua = {}, -- Used to format Lua code
+        gopls = {},
+        -- rust_analyzer = {},
+        -- clangd = {},
+        -- pyright = {},
 
         -- Special Lua Config, as recommended by neovim help docs
         lua_ls = {
@@ -857,32 +838,10 @@ require('lazy').setup({
     lazy = false,
     config = function()
       require('themery').setup {
-        themes = { 'rose-pine', 'kanagawa', 'gruvbox-material', 'vague', 'everforest', 'evergarden', 'catppuccin' },
+        themes = { 'vague' },
         live_preview = true,
       }
     end,
-  },
-  {
-    'everviolet/nvim',
-    name = 'evergarden',
-    priority = 1000, -- Colorscheme plugin is loaded first before any other plugins
-    opts = {
-      theme = {
-        variant = 'winter', -- 'winter'|'fall'|'spring'|'summer'
-        accent = 'green',
-      },
-      editor = {
-        transparent_background = true,
-        sign = { color = 'none' },
-        float = {
-          color = 'mantle',
-          solid_border = false,
-        },
-        completion = {
-          color = 'surface0',
-        },
-      },
-    },
   },
   {
     'vague-theme/vague.nvim',
@@ -897,78 +856,7 @@ require('lazy').setup({
       vim.cmd 'colorscheme vague'
     end,
   },
-  {
-    'catppuccin/nvim',
-    name = 'catppuccin',
-    priority = 1000,
-    config = function()
-      -- NOTE: you do not need to call setup if you don't want to.
-      require('catppuccin').setup {
-        -- optional configuration here
-        transparent_background = true,
-      }
-      vim.cmd 'colorscheme catppuccin'
-    end,
-  },
 
-  {
-    'rebelot/kanagawa.nvim',
-    priority = 1000,
-    config = function() vim.cmd.colorscheme 'kanagawa' end,
-  },
-
-  {
-    'sainnhe/everforest',
-    lazy = false,
-    priority = 1000,
-    config = function()
-      -- Optionally configure and load the colorscheme
-      -- directly inside the plugin declaration.
-      vim.g.everforest_enable_italic = 1
-      vim.g.background = 'dark'
-      vim.g.everforest_background = 'hard'
-      vim.cmd.colorscheme 'everforest'
-    end,
-  },
-
-  {
-    'sainnhe/gruvbox-material',
-    lazy = false,
-    priority = 1000,
-    config = function()
-      -- Optionally configure and load the colorscheme
-      -- directly inside the plugin declaration.
-      vim.g.gruvbox_material_enable_italic = 1
-      vim.g.gruvbox_material_background = 'hard'
-      vim.g.background = 'dark'
-      vim.cmd.colorscheme 'gruvbox-material'
-    end,
-  },
-
-  -- { -- You can easily change to a different colorscheme.
-  --   -- Change the name of the colorscheme plugin below, and then
-  --   -- change the command in the config to whatever the name of that colorscheme is.
-  --   --
-  --   -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-  --   'rose-pine/neovim',
-  --   priority = 1000, -- Make sure to load this before all the other start plugins.
-  --   config = function() vim.cmd.colorscheme 'rose-pine' end,
-  -- },
-
-  {
-    'rose-pine/neovim',
-    priority = 1000, -- make sure to load this before all the other plugins
-    config = function()
-      require('rose-pine').setup {
-        styles = {
-          bold = true,
-          italic = true,
-          transparency = true,
-        },
-      }
-      vim.cmd 'colorscheme rose-pine'
-    end,
-  },
   -- Highlight todo, notes, etc in comments
   {
     'folke/todo-comments.nvim',
@@ -1009,14 +897,13 @@ require('lazy').setup({
       --  - va)  - [V]isually select [A]round [)]paren
       --  - yinq - [Y]ank [I]nside [N]ext [Q]uote
       --  - ci'  - [C]hange [I]nside [']quote
-      require('mini.ai').setup { n_lines = 500 }
-
-      -- Add/delete/replace surroundings (brackets, quotes, etc.)
-      --
-      -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
-      -- - sd'   - [S]urround [D]elete [']quotes
-      -- - sr)'  - [S]urround [R]eplace [)] [']
-      require('mini.surround').setup()
+      -- require('mini.ai').setup { n_lines = 500 }
+      require('mini.ai').setup {
+        n_lines = 500,
+        custom_textobjects = {
+          f = require('mini.ai').gen_spec.treesitter { a = '@function.outer', i = '@function.inner' },
+        },
+      }
 
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
@@ -1050,10 +937,29 @@ require('lazy').setup({
     lazy = false,
     build = ':TSUpdate',
     branch = 'main',
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter-textobjects', -- add this
+    },
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter-intro`
     config = function()
-      local parsers =
-        { 'javascript', 'typescript', 'rust', 'go', 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
+      local parsers = {
+        'javascript',
+        'typescript',
+        'zig',
+        'rust',
+        'go',
+        'bash',
+        'c',
+        'diff',
+        'html',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'query',
+        'vim',
+        'vimdoc',
+      }
       require('nvim-treesitter').install(parsers)
       vim.api.nvim_create_autocmd('FileType', {
         callback = function(args)
@@ -1067,10 +973,9 @@ require('lazy').setup({
           -- enables syntax highlighting and other treesitter features
           vim.treesitter.start(buf, language)
 
-          -- enables treesitter based folds
-          -- for more info on folds see `:help folds`
-          -- vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
-          -- vim.wo.foldmethod = 'expr'
+          vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+          vim.wo.foldmethod = 'expr'
+          vim.o.foldlevel = 99
 
           -- enables treesitter based indentation
           vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
@@ -1078,7 +983,19 @@ require('lazy').setup({
       })
     end,
   },
-
+  {
+    'folke/flash.nvim',
+    event = 'VeryLazy',
+    ---@type Flash.Config
+    opts = {},
+    keys = {
+      { 's', mode = { 'n', 'x', 'o' }, function() require('flash').jump() end, desc = 'Flash' },
+      { 'S', mode = { 'n', 'x', 'o' }, function() require('flash').treesitter() end, desc = 'Flash Treesitter' },
+      { 'r', mode = 'o', function() require('flash').remote() end, desc = 'Remote Flash' },
+      { 'R', mode = { 'o', 'x' }, function() require('flash').treesitter_search() end, desc = 'Treesitter Search' },
+      { '<c-s>', mode = { 'c' }, function() require('flash').toggle() end, desc = 'Toggle Flash Search' },
+    },
+  },
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -1129,3 +1046,16 @@ require('lazy').setup({
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
+vim.api.nvim_set_hl(0, 'FlashLabel', {
+  fg = '#ffffff',
+  bg = '#ff007c', -- hot pink
+  bold = true,
+})
+
+vim.api.nvim_set_hl(0, 'FlashBackdrop', {
+  fg = '#444444',
+})
+
+-- vim.keymap.set({ 'n', 'x', 'o' }, 's', function() require('flash').jump() end, { silent = true })
+--
+-- vim.keymap.set('n', 'S', function() require('flash').treesitter() end, { silent = true })
