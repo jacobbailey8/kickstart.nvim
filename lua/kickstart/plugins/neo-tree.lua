@@ -1,6 +1,4 @@
--- Neo-tree is a Neovim plugin to browse the file system
--- https://github.com/nvim-neo-tree/neo-tree.nvim
-
+-- lua/kickstart/plugins/neo-tree.lua
 ---@module 'lazy'
 ---@type LazySpec
 return {
@@ -12,10 +10,9 @@ return {
     'MunifTanjim/nui.nvim',
   },
   keys = {
-    { '<leader>e', ':Neotree reveal<CR>', desc = 'NeoTree reveal', silent = true },
+    { '<leader>e', ':Neotree toggle reveal<CR>', desc = 'NeoTree toggle', silent = true },
   },
   opts = {
-    reveal_force_cwd = true,
     close_if_last_window = true,
     popup_border_style = 'rounded',
     enable_git_status = true,
@@ -29,12 +26,12 @@ return {
         highlight = 'NeoTreeIndentMarker',
         with_markers = true,
         with_expanders = true,
-        expander_collapsed = '',
-        expander_expanded = '',
+        expander_collapsed = '',
+        expander_expanded = '',
       },
       icon = {
-        folder_closed = '',
-        folder_open = '',
+        folder_closed = '',
+        folder_open = '',
         folder_empty = 'ﰊ',
         default = '*',
       },
@@ -42,65 +39,88 @@ return {
         trailing_slash = true,
         use_git_status_colors = true,
       },
+      git_status = {
+        symbols = {
+          added = '+',
+          modified = '~',
+          deleted = '-',
+          renamed = '»',
+          untracked = '?',
+          ignored = '◌',
+          unstaged = '✗',
+          staged = '✓',
+          conflict = '',
+        },
+      },
     },
     window = {
       position = 'left',
       width = 35,
       mappings = {
+        -- Navigation
         ['l'] = 'open',
         ['h'] = 'close_node',
-        ['S'] = 'open_split',
-        ['s'] = 'open_vsplit',
-        ['A'] = 'add',
-        ['d'] = 'delete',
-        ['r'] = 'rename',
-        ['R'] = 'refresh',
-        ['q'] = 'close_window',
-
-        -- toggle hidden / ignored files
-        ['I'] = 'toggle_hidden', -- show/hide dotfiles
-        ['H'] = 'toggle_gitignore', -- show/hide gitignored files
-
-        -- Set CWD bindings
         ['<CR>'] = function(state)
           local node = state.tree:get_node()
-          if node then
-            local path = node.path
-            if vim.fn.isdirectory(path) == 0 then path = vim.fn.fnamemodify(path, ':h') end
-            vim.cmd('cd ' .. path)
-            print('CWD set to: ' .. path)
+          if not node then return end
+          local path = node.path
+          if node.type == 'directory' then
+            vim.cmd('cd ' .. vim.fn.fnameescape(path))
+            print('CWD: ' .. path)
+            -- Refresh so neo-tree re-roots to the new cwd
+            require('neo-tree.sources.manager').refresh 'filesystem'
+          else
+            -- file: cd to its parent dir then open it
+            local parent = vim.fn.fnamemodify(path, ':h')
+            vim.cmd('cd ' .. vim.fn.fnameescape(parent))
+            print('CWD: ' .. parent)
+            require('neo-tree.sources.common.commands').open(state)
           end
         end,
-        ['p'] = function(state)
-          local node = state.tree:get_node()
-          if node then
-            local path = vim.fn.fnamemodify(node.path, ':h')
-            vim.cmd('cd ' .. path)
-            print('CWD set to parent: ' .. path)
-          end
-        end,
+        ['<space>'] = 'toggle_node',
+        ['P'] = { 'toggle_preview', config = { use_float = true } },
+
+        -- Splits
+        ['s'] = 'open_vsplit',
+        ['S'] = 'open_split',
+
+        -- File operations
+        ['a'] = 'add',
+        ['A'] = 'add_directory',
+        ['d'] = 'delete',
+        ['r'] = 'rename',
+        ['y'] = 'copy_to_clipboard',
+        ['x'] = 'cut_to_clipboard',
+        ['p'] = 'paste_from_clipboard',
+        ['c'] = 'copy',
+        ['m'] = 'move',
+
+        -- Tree control
+        ['R'] = 'refresh',
+        ['q'] = 'close_window',
+        ['?'] = 'show_help',
+
+        -- Visibility toggles
+        ['I'] = 'toggle_hidden',
       },
     },
     filesystem = {
-      window = {
-        mappings = {
-          ['<leader>e'] = 'close_window',
-        },
-      },
       follow_current_file = {
         enabled = true,
-        leave_dirs_open = false, -- optional: keep parent dirs open
+        leave_dirs_open = false,
       },
       use_libuv_file_watcher = true,
+      hijack_netrw_behavior = 'open_current',
       filtered_items = {
+        visible = false,
         hide_dotfiles = true,
         hide_gitignored = false,
+        hide_by_name = { 'node_modules', '.git' },
+        never_show = { '.DS_Store' },
       },
     },
     buffers = {
-      follow_current_file = {
-        enabled = false,
-      },
+      follow_current_file = { enabled = true },
       group_empty_dirs = true,
       show_unloaded = true,
       window = {
@@ -112,30 +132,5 @@ return {
         },
       },
     },
-    git_status = {
-      symbols = {
-        added = '+',
-        modified = '~',
-        deleted = '-',
-        renamed = '»',
-        untracked = '?',
-        ignored = '◌',
-        unstaged = '✗',
-        staged = '✓',
-        conflict = '',
-      },
-    },
   },
-},
-  -- Auto-close Neo-tree on file open
-  vim.api.nvim_create_autocmd('BufEnter', {
-    callback = function()
-      local ft = vim.bo.filetype
-      if ft ~= 'neo-tree' then
-        for _, win in ipairs(vim.api.nvim_list_wins()) do
-          local buf = vim.api.nvim_win_get_buf(win)
-          if vim.bo[buf].filetype == 'neo-tree' then vim.api.nvim_win_close(win, true) end
-        end
-      end
-    end,
-  })
+}

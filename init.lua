@@ -4,13 +4,15 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+vim.o.winborder = 'rounded'
+
 vim.keymap.set('n', 's', '<Nop>')
 vim.keymap.set('x', 's', '<Nop>')
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
-vim.opt.fillchars:append { eob = ' ' }
+-- vim.opt.fillchars:append { eob = ' ' }
 
 -- [[ Setting options ]]
 -- See `:help vim.o`
@@ -123,7 +125,7 @@ vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower win
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 -- Keymaps to open and close splits
-vim.keymap.set('n', '<leader>|', '<C-w><C-V>', { desc = 'Split window vertically' })
+vim.keymap.set('n', '<leader>,', '<C-w><C-V>', { desc = 'Split window vertically' })
 vim.keymap.set('n', '<leader>-', '<C-w><C-S>', { desc = 'Split window horizontally' })
 vim.keymap.set('n', '<leader>wd', '<C-w><C-Q>', { desc = '[D]elete [W]indow' })
 
@@ -337,7 +339,25 @@ require('lazy').setup({
   --
   -- Then, because we use the `opts` key (recommended), the configuration runs
   -- after the plugin has been loaded as `require(MODULE).setup(opts)`.
-
+  {
+    'sindrets/diffview.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    cmd = { 'DiffviewOpen', 'DiffviewFileHistory' },
+    keys = {
+      { '<leader>gd', '<cmd>DiffviewOpen<CR>', desc = '[G]it [D]iff view' },
+      { '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', desc = '[G]it File [H]istory' },
+      { '<leader>gH', '<cmd>DiffviewFileHistory<CR>', desc = '[G]it Repo [H]istory' },
+      { '<leader>gc', '<cmd>DiffviewClose<CR>', desc = '[G]it [C]lose diff' },
+    },
+    opts = {
+      enhanced_diff_hl = true,
+      view = {
+        merge_tool = {
+          layout = 'diff3_mixed', -- ours | result (editable) | theirs, with base below
+        },
+      },
+    },
+  },
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter',
@@ -832,16 +852,69 @@ require('lazy').setup({
     },
   },
 
+  {
+    'ThePrimeagen/vim-be-good',
+  },
+
   -- Themes
+  {
+    'shatur/neovim-ayu',
+  },
   {
     'zaldih/themery.nvim',
     lazy = false,
     config = function()
       require('themery').setup {
-        themes = { 'vague' },
+        themes = { 'default', 'vague', 'cold', 'tokyonight', 'ayu', 'oxocarbon', 'poimandres' },
         live_preview = true,
       }
     end,
+  },
+  {
+    'gmr458/cold.nvim',
+  },
+
+  {
+    'olivercederborg/poimandres.nvim',
+    lazy = false,
+    priority = 1000,
+    config = function()
+      require('poimandres').setup {
+        -- leave this setup function empty for default config
+        -- or refer to the configuration section
+        -- for configuration options
+      }
+    end,
+
+    -- optionally set the colorscheme within lazy config
+    init = function() vim.cmd 'colorscheme poimandres' end,
+  },
+  {
+    'nyoom-engineering/oxocarbon.nvim',
+    -- Add in any other configuration;
+    --   event = foo,
+    --   config = bar
+    --   end,
+  },
+  {
+    'zenbones-theme/zenbones.nvim',
+    -- Optionally install Lush. Allows for more configuration or extending the colorscheme
+    -- If you don't want to install lush, make sure to set g:zenbones_compat = 1
+    -- In Vim, compat mode is turned on as Lush only works in Neovim.
+    dependencies = 'rktjmp/lush.nvim',
+    lazy = false,
+    priority = 1000,
+    -- you can set set configuration options here
+    -- config = function()
+    --     vim.g.zenbones_darken_comments = 45
+    --     vim.cmd.colorscheme('zenbones')
+    -- end
+  },
+  {
+    'folke/tokyonight.nvim',
+    lazy = false,
+    priority = 1000,
+    opts = { style = 'night', transparent = true },
   },
   {
     'vague-theme/vague.nvim',
@@ -884,7 +957,7 @@ require('lazy').setup({
     -- setting the keybinding for LazyGit with 'keys' is recommended in
     -- order to load the plugin when the command is run for the first time
     keys = {
-      { '<leader>lg', '<cmd>LazyGit<cr>', desc = 'LazyGit' },
+      { '<leader>gg', '<cmd>LazyGit<cr>', desc = 'LazyGit' },
     },
   },
 
@@ -902,9 +975,70 @@ require('lazy').setup({
         n_lines = 500,
         custom_textobjects = {
           f = require('mini.ai').gen_spec.treesitter { a = '@function.outer', i = '@function.inner' },
+          i = function(ai_type)
+            local spaces = (' '):rep(vim.o.tabstop)
+            local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+            local indents = {}
+
+            for l, line in ipairs(lines) do
+              if not line:find '^%s*$' then
+                indents[#indents + 1] = {
+                  line = l,
+                  indent = #line:gsub(spaces, '\t'):match '^(\t*)',
+                }
+              end
+            end
+
+            local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
+            local cursor_indent
+            for _, v in ipairs(indents) do
+              if v.line == cursor_line then
+                cursor_indent = v.indent
+                break
+              end
+            end
+            if not cursor_indent then return end
+
+            local from_line, to_line = cursor_line, cursor_line
+            for i = cursor_line - 1, 1, -1 do
+              local found = false
+              for _, v in ipairs(indents) do
+                if v.line == i then
+                  if v.indent < cursor_indent then break end
+                  from_line = i
+                  found = true
+                  break
+                end
+              end
+              if not found then break end
+            end
+            for i = cursor_line + 1, #lines do
+              local found = false
+              for _, v in ipairs(indents) do
+                if v.line == i then
+                  if v.indent < cursor_indent then break end
+                  to_line = i
+                  found = true
+                  break
+                end
+              end
+              if not found then break end
+            end
+
+            local from = { line = from_line, col = 1 }
+            local to = { line = to_line, col = #lines[to_line] }
+
+            if ai_type == 'a' then
+              -- include the line above (the "header" line, e.g. function/if)
+              if from_line > 1 then from.line = from_line - 1 end
+              from.col = #lines[from.line] > 0 and 1 or 1
+              to.col = #lines[to_line]
+            end
+
+            return { from = from, to = to }
+          end,
         },
       }
-
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
       --  and try some other statusline plugin
@@ -1056,6 +1190,16 @@ vim.api.nvim_set_hl(0, 'FlashBackdrop', {
   fg = '#444444',
 })
 
+-- vim.api.nvim_create_autocmd('FileType', {
+--   pattern = 'neo-tree',
+--   callback = function(event)
+--     vim.keymap.set('n', '<leader>e', '<cmd>Neotree toggle<CR>', {
+--       buffer = event.buf,
+--       silent = true,
+--       desc = 'NeoTree toggle',
+--     })
+--   end,
+-- })
 -- vim.keymap.set({ 'n', 'x', 'o' }, 's', function() require('flash').jump() end, { silent = true })
 --
 -- vim.keymap.set('n', 'S', function() require('flash').treesitter() end, { silent = true })
