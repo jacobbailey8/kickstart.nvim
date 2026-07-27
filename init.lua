@@ -663,11 +663,9 @@ require('lazy').setup({
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         ts_ls = {},
         zls = {},
-        stylua = {}, -- Used to format Lua code
+        stylua = {},
         gopls = {},
-        -- rust_analyzer = {},
-        -- clangd = {},
-        -- pyright = {},
+        tofu_ls = {},
 
         -- Special Lua Config, as recommended by neovim help docs
         lua_ls = {
@@ -865,11 +863,16 @@ require('lazy').setup({
     lazy = false,
     config = function()
       require('themery').setup {
-        themes = { 'default', 'vague', 'cold', 'tokyonight', 'ayu', 'oxocarbon', 'poimandres' },
+        themes = { 'default', 'nord', 'vague', 'cold', 'tokyonight', 'ayu', 'oxocarbon', 'poimandres' },
         live_preview = true,
       }
     end,
   },
+
+  {
+    'shaunsingh/nord.nvim',
+  },
+
   {
     'gmr458/cold.nvim',
   },
@@ -1079,6 +1082,8 @@ require('lazy').setup({
       local parsers = {
         'javascript',
         'typescript',
+        'terraform',
+        'hcl',
         'zig',
         'rust',
         'go',
@@ -1139,12 +1144,13 @@ require('lazy').setup({
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  -- require 'kickstart.plugins.debug',
-  require 'kickstart.plugins.indent_line',
-  -- require 'kickstart.plugins.lint',
-  require 'kickstart.plugins.autopairs',
-  require 'kickstart.plugins.neo-tree',
-  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  -- require 'custom.plugins.debug',
+  require 'custom.plugins.indent_line',
+  -- require 'custom.plugins.lint',
+  require 'custom.plugins.autopairs',
+  require 'custom.plugins.neo-tree',
+  require 'custom.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  -- require 'custom.plugins.ai', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
