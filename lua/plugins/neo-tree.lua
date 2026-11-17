@@ -1,4 +1,3 @@
--- lua/kickstart/plugins/neo-tree.lua
 ---@module 'lazy'
 ---@type LazySpec
 return {
